@@ -2,6 +2,10 @@ package OOP.Solution;
 
 import OOP.Provided.*;
 import java.io.File;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 public class OOPMultipleControl {
 
@@ -28,6 +32,16 @@ public class OOPMultipleControl {
     }
 
     //TODO: add more of your code :
+    public enum OOPModifier{
+    	DEFAULT, PRIVATE, PROTECTED, PUBLIC
+    }
+    
+    @Target(ElementType.METHOD)	// to be used just for methods.
+    @Retention(RetentionPolicy.RUNTIME) //make it valid on runtime.
+    public @interface OOPMethod {
+    	OOPModifier modifier() default OOPModifier.DEFAULT;
+    }
+    
 
 
     //TODO: DO NOT CHANGE !!!!!!
