@@ -1,6 +1,7 @@
 package OOP.Solution;
 
 import java.util.HashMap;
+import java.util.HashSet;
 
 interface A
 {
@@ -43,6 +44,49 @@ public class InterfacesGraph {
 			buildGraph(iter);
 		}
 	}
+	
+	
+	public boolean containsCircle(){
+		//creating a copy of interfaces
+		HashMap<Class<?>, Class<?>[] > graph = new HashMap<Class<?>, Class<?>[] >(interfaces);
+		HashSet<Class<?>> sources = getSources(graph);
+		
+		while(graph.size() > 0){
+			Class<?> src = getOneSource(sources);
+			//no more sources => we got a cycle.
+			if (src == null){
+				return false;
+			}
+			//getting over on all edges from src and removing them
+			//in addition we also check if we gain more sources.
+			for (Class<?> inter: graph.get(src)){
+				if (isSource(inter)){
+					sources.add(inter);
+				}
+			}
+			removeVertex(graph, Class<?> src);
+		}
+		
+		return true;
+		
+		
+	}
+	private HashSet<Class<?>> getSources( HashMap<Class<?>, Class<?>[] > graph) {
+		HashSet<Class<?>> sources = new HashSet<Class<?>>();
+		for (Class<?> v: graph.keySet()) {
+			if (isSource(v)){
+				sources.add(v);
+			}
+		}
+		return sources;
+	}
+	
+	private Class<?> getOneSource(HashSet<Class<?>> sources) {
+		for (Class<?> )
+		return null;
+	}
+	
+	
 	public static void main (String[] args) throws java.lang.Exception
 	{
 		InterfacesGraph g= new InterfacesGraph(C.class);

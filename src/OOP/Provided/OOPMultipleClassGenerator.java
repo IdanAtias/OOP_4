@@ -209,6 +209,7 @@ public class OOPMultipleClassGenerator {
                     paramsArray += param + ",";
                 }
                 paramsArray = paramsArray.substring(0,paramsArray.length()-1);
+		paramsArray += "}";
             }
             
             if(params.size() == 0){
