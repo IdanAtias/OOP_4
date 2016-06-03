@@ -2,6 +2,11 @@ package OOP.Solution;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.lang.reflect.Method;
+
+import OOP.Provided.OOPInherentAmbiguity;
+import OOP.Provided.OOPMultipleException;
 
 interface A
 {
@@ -22,30 +27,99 @@ public class InterfacesGraph {
 	//graph of interfaces:
 	//vertices are interfaces
 	//edge u->v == u extends v
-	public HashMap<Class<?>, Class<?>[] > interfaces = new HashMap<Class<?>, Class<?>[] >();
 	
-	InterfacesGraph(Class<?> baseInterClass){
+	/*TODO - CHANGE TO PRIVATE*/
+	public HashMap<Node, Class<?>[] > interfaces = new HashMap<Node, Class<?>[] >();
+	public Class<?> base;
+	/*****************/
+	
+	InterfacesGraph(Class<?> baseInterClass) throws OOPMultipleException{
 		//TODO: throw compatible exception
+		base = baseInterClass;
 		buildGraph(baseInterClass);
 	}
 	
-	private void buildGraph(Class<?> interClass){
+	private class Node {
+		public Class<?> inter;
+		public Class<?> father;
+		public Node(Class<?> inter, Class<?> father) {
+			this.inter = inter;
+			this.father = father;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (obj == null) {
+				return false;
+			}
+			if (!(obj instanceof Node)) {
+				return false;
+			}
+			Node other = (Node) obj;
+			if (!getOuterType().equals(other.getOuterType())) {
+				return false;
+			}
+			if (father == null) {
+				if (other.father != null) {
+					return false;
+				}
+			} else if (father != other.father) {
+				return false;
+			}
+			if (inter == null) {
+				if (other.inter != null) {
+					return false;
+				}
+			} else if (inter != other.inter) {
+				return false;
+			}
+			return true;
+		}
+		private InterfacesGraph getOuterType() {
+			return InterfacesGraph.this;
+		}
+		
+		
+	}
+	
+	private void buildGraph(Node interNode) throws OOPMultipleException {
 		//getting the interfaces baseInter extends:
-		Class<?>[] interfaces = interClass.getInterfaces();
+		Class<?>[] interfaces = interNode.inter.getInterfaces();
+		
 		//base cond: no interfaces extended then return
-		this.interfaces.put(interClass,interfaces);
+		this.interfaces.put(interNode,interfaces);
 		if (interfaces.length == 0){	
 			return;
 		}
 		for (Class<?> iter: interfaces) {
-			if (this.interfaces.containsKey(iter)) {
-				continue;
+			Node currNode = new Node(iter, interNode.inter);
+			if (this.interfaces.containsKey(currNode)) {
+					checkForAmbiguity(currNode); //throws OOPinheritedAmbiguity if fails.
 			}
-			buildGraph(iter);
+			buildGraph(currNode);
 		}
 	}
 	
-	
+	private void checkForAmbiguity(Node interNode) throws OOPMultipleException{
+		LinkedList<Node> path = getPathToBase(interNode);
+		Node existsNode;
+		for (Node curr: interfaces.keySet()){
+			if (curr.equals(interNode)){
+				existsNode = curr;
+				break;
+			}
+		}
+		Node intersection = getIntersection(existsNode, path));
+		HashSet<Method> methods= new HashSet<Method>();
+		for (Method m: interNode.inter.getMethods()) {
+			methods.add(m);
+		}
+		checkForAmbiguityAux(intersection, methods);
+	}
+
 	public boolean containsCircle(){
 		//creating a copy of interfaces
 		HashMap<Class<?>, Class<?>[] > graph = new HashMap<Class<?>, Class<?>[] >(interfaces);
