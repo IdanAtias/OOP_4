@@ -21,7 +21,7 @@ public class OOPMultipleControl {
 
     //TODO: fill in here :
     public void validateInheritanceTree() throws OOPMultipleException {
-
+    	
     }
 
     //TODO: fill in here :
