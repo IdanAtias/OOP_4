@@ -1,9 +1,10 @@
 package OOP.Solution;
 
 import java.util.HashMap;
-//import java.util.HashSet;
 import java.util.LinkedList;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+
 
 import OOP.Provided.OOPInherentAmbiguity;
 import OOP.Provided.OOPMultipleException;
@@ -19,11 +20,9 @@ interface I5 {
 
 interface I4 extends I5
 {
-
 }
 
 interface I3 extends I5 {
-
 }
 
 interface I2 extends I3, I4 {
@@ -48,8 +47,21 @@ public class InterfacesGraph {
 
 	InterfacesGraph(Class<?> baseInterClass) throws OOPMultipleException {
 		// TODO: throw compatible exception
+		checkAnnotations (baseInterClass);
 		base = new Node(baseInterClass, null);
 		buildGraph(base);
+	}
+
+	private void checkAnnotations(Class<?> inter) throws OOPMultipleException {
+		Method[] methods= inter.getDeclaredMethods();
+		for (Method m: methods) {
+			Annotation[] annotations = m.getAnnotations();
+			boolean hasOOPAnottaion=false;
+			for (Annotation a : annotations) {
+				if (a.toString()=="OOPMethod") hasOOPAnottaion=true;
+			}
+			if (hasOOPAnottaion==false) throw new OOPInherentAmbiguity(base.inter, inter, m);
+		}
 	}
 
 	private class Node {
@@ -104,16 +116,18 @@ public class InterfacesGraph {
 		}
 	}
 
+	//buildGraph -> on every node: checkForAmbiguitiy -> getPathToBase, getIntersection, checkForAmbiguityAux
 	private void buildGraph(Node interNode) throws OOPMultipleException {
 		// getting the interfaces baseInter extends:
 		Class<?>[] interfaces = interNode.inter.getInterfaces();
-
+		
 		// base cond: no interfaces extended then return
 		this.interfaces.put(interNode, interfaces);
 		if (interfaces.length == 0) {
 			return;
 		}
 		for (Class<?> iter : interfaces) {
+			checkAnnotations(iter);
 			Node currNode = new Node(iter, interNode);
 			if (this.interfaces.containsKey(currNode)) {
 				checkForAmbiguity(currNode); // throws OOPinheritedAmbiguity if
@@ -134,7 +148,7 @@ public class InterfacesGraph {
 		}
 		Node intersection = getIntersection(existsNode, path);
 		LinkedList<Method> methods = new LinkedList<Method>();
-		for (Method m : interNode.inter.getMethods()) {
+		for (Method m : interNode.inter.getDeclaredMethods()) {
 			methods.add(m);
 		}
 		checkForAmbiguityAux(intersection, methods, interNode);
@@ -188,14 +202,16 @@ public class InterfacesGraph {
 	}
 
 	public static void main(String[] args) throws java.lang.Exception {
-		try {
-			InterfacesGraph g = new InterfacesGraph(I1.class);
-			g.printGraph();
-		} catch (OOPInherentAmbiguity e) {
-			System.out.println(e.getMessage());
+//		try {
+			System.out.println((I2.class.getDeclaredMethods())[0].getName());
 			return;
-		}
-		System.out.println("SUCCESS");
+//			InterfacesGraph g = new InterfacesGraph(I1.class);
+//			g.printGraph();
+//		} catch (OOPInherentAmbiguity e) {
+//			System.out.println(e.getMessage());
+//			return;
+//		}
+//		System.out.println("SUCCESS");
 	}
 
 }
