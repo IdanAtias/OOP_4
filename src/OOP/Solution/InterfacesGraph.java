@@ -104,7 +104,7 @@ public class InterfacesGraph {
 		}
 	}
 
-	private class Node {
+	public class Node {
 		public Class<?> inter;
 		public Node father;
 
