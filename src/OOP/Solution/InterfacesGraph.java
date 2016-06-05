@@ -5,7 +5,6 @@ import java.util.LinkedList;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
-
 import OOP.Provided.OOPInherentAmbiguity;
 import OOP.Provided.OOPMultipleException;
 
@@ -13,9 +12,7 @@ interface I5 {
 	void fa();
 
 	void fb();
-
 	void fc();
-
 }
 
 interface I4 extends I5
@@ -130,8 +127,7 @@ public class InterfacesGraph {
 			checkAnnotations(iter);
 			Node currNode = new Node(iter, interNode);
 			if (this.interfaces.containsKey(currNode)) {
-				checkForAmbiguity(currNode); // throws OOPinheritedAmbiguity if
-												// fails.
+				checkForAmbiguity(currNode); // throws OOPinheritedAmbiguity if fails.
 			}
 			buildGraph(currNode);
 		}
@@ -160,6 +156,7 @@ public class InterfacesGraph {
 		for (Node n : path) {
 			Method[] nMethods = n.inter.getMethods();
 			for (Method m : nMethods) {
+				
 				methods.remove(m);
 			}
 		}
@@ -213,5 +210,4 @@ public class InterfacesGraph {
 //		}
 //		System.out.println("SUCCESS");
 	}
-
 }
