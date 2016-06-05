@@ -14,13 +14,10 @@ import java.lang.reflect.Executable;//equalParamTypes(Class<?>[] arg0, Class<?>[
 
 interface I5 {
     @OOPMethod(modifier = OOPModifier.PUBLIC)
-
 	void fa();
     @OOPMethod(modifier = OOPModifier.PUBLIC)
-
 	void fb();
     @OOPMethod(modifier = OOPModifier.PUBLIC)
-
 	void fc();
 }
 
@@ -35,6 +32,8 @@ interface I2 extends I3, I4 {
 	void fa();
     @OOPMethod(modifier = OOPModifier.PUBLIC)
 	void fb();
+  @OOPMethod(modifier = OOPModifier.PUBLIC)
+	void fc();
 }
 
 interface I1 extends I2 {
@@ -200,6 +199,9 @@ public class InterfacesGraph {
 			throws OOPMultipleException {
 		LinkedList<Node> path = getPathToBase(intersection);
 		for (Node node : path) {
+			if (node.equals(base)){ /*base funcs cant override*/
+				continue;
+			}
 			Method[] nMethods = node.inter.getDeclaredMethods();
 			for (Method n_method : nMethods) {
 				LinkedList<Method> methods_cpy = new LinkedList<Method>(methods);
