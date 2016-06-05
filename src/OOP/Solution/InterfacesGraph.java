@@ -7,28 +7,39 @@ import java.lang.reflect.Method;
 
 import OOP.Provided.OOPInherentAmbiguity;
 import OOP.Provided.OOPMultipleException;
+import OOP.Solution.OOPMultipleControl.OOPMethod;
+import OOP.Solution.OOPMultipleControl.OOPModifier;
+
+import java.lang.reflect.Executable;//equalParamTypes(Class<?>[] arg0, Class<?>[] arg1)
 
 interface I5 {
+    @OOPMethod(modifier = OOPModifier.PUBLIC)
+
 	void fa();
+    @OOPMethod(modifier = OOPModifier.PUBLIC)
 
 	void fb();
+    @OOPMethod(modifier = OOPModifier.PUBLIC)
+
 	void fc();
 }
 
-interface I4 extends I5
-{
+interface I4 extends I5 {
 }
 
 interface I3 extends I5 {
 }
 
 interface I2 extends I3, I4 {
+    @OOPMethod(modifier = OOPModifier.PUBLIC)
 	void fa();
+    @OOPMethod(modifier = OOPModifier.PUBLIC)
 	void fb();
 }
 
 interface I1 extends I2 {
-	void fc();
+//    @OOPMethod(modifier = OOPModifier.PUBLIC)
+//	void fc();
 }
 
 public class InterfacesGraph {
@@ -44,20 +55,53 @@ public class InterfacesGraph {
 
 	InterfacesGraph(Class<?> baseInterClass) throws OOPMultipleException {
 		// TODO: throw compatible exception
-		checkAnnotations (baseInterClass);
 		base = new Node(baseInterClass, null);
+		checkAnnotations(baseInterClass);
 		buildGraph(base);
+	}
+	
+	private boolean isEqualParamTypes(Class<?>[] arg0, Class<?>[] arg1) {
+		if (arg0.length == arg1.length) {
+			for (int arg2 = 0; arg2 < arg0.length; ++arg2) {
+				if (arg0[arg2] != arg1[arg2]) {
+					return false;
+				}
+			}
+
+			return true;
+		} else {
+			return false;
+		}
+	}
+	/*
+	 * Params:
+	 * @mToOverride - the "problematic" method in the faulty class that should be overriden
+	 * @m - method to check if overrides mToOverride
+	 * 
+	 * @return
+	 * True if overrides, else False.
+	 */
+	private boolean checkForOverride(Method mToOverride, Method m) {
+		if (mToOverride != null && m != null && m instanceof Method && mToOverride instanceof Method) {
+			if (mToOverride.getName() == m.getName() && mToOverride.getReturnType().equals(m.getReturnType())
+					&& isEqualParamTypes(mToOverride.getParameterTypes(), m.getParameterTypes())) {
+					OOPModifier mod_m = (m.getAnnotation(OOPMethod.class)).modifier();
+					OOPModifier mod_mToOverride = (mToOverride.getAnnotation(OOPMethod.class)).modifier();
+					if (mod_mToOverride==OOPModifier.DEFAULT || mod_m == OOPModifier.DEFAULT) {
+						/*TODO - add code*/
+					}
+					return true;
+			}
+		}
+		return false;
 	}
 
 	private void checkAnnotations(Class<?> inter) throws OOPMultipleException {
-		Method[] methods= inter.getDeclaredMethods();
-		for (Method m: methods) {
-			Annotation[] annotations = m.getAnnotations();
-			boolean hasOOPAnottaion=false;
-			for (Annotation a : annotations) {
-				if (a.toString()=="OOPMethod") hasOOPAnottaion=true;
+		Method[] methods = inter.getDeclaredMethods();
+		for (Method m : methods) {
+			if (!m.isAnnotationPresent(OOPMethod.class)){
+				throw new OOPInherentAmbiguity(base.inter, inter, m);	
 			}
-			if (hasOOPAnottaion==false) throw new OOPInherentAmbiguity(base.inter, inter, m);
 		}
 	}
 
@@ -78,7 +122,7 @@ public class InterfacesGraph {
 			 * interfaceClass doesn't have how to "hashCode" so we use its name
 			 * which is String that has "hashCode" implemented.
 			 */
-			//result = prime * result + getOuterType().hashCode();
+			// result = prime * result + getOuterType().hashCode();
 			result = prime * result + ((inter == null) ? 0 : inter.getSimpleName().hashCode());
 			return result;
 		}
@@ -113,11 +157,12 @@ public class InterfacesGraph {
 		}
 	}
 
-	//buildGraph -> on every node: checkForAmbiguitiy -> getPathToBase, getIntersection, checkForAmbiguityAux
+	// buildGraph -> on every node: checkForAmbiguitiy -> getPathToBase,
+	// getIntersection, checkForAmbiguityAux
 	private void buildGraph(Node interNode) throws OOPMultipleException {
 		// getting the interfaces baseInter extends:
 		Class<?>[] interfaces = interNode.inter.getInterfaces();
-		
+
 		// base cond: no interfaces extended then return
 		this.interfaces.put(interNode, interfaces);
 		if (interfaces.length == 0) {
@@ -127,7 +172,8 @@ public class InterfacesGraph {
 			checkAnnotations(iter);
 			Node currNode = new Node(iter, interNode);
 			if (this.interfaces.containsKey(currNode)) {
-				checkForAmbiguity(currNode); // throws OOPinheritedAmbiguity if fails.
+				checkForAmbiguity(currNode); // throws OOPinheritedAmbiguity if
+												// fails.
 			}
 			buildGraph(currNode);
 		}
@@ -153,11 +199,13 @@ public class InterfacesGraph {
 	private void checkForAmbiguityAux(Node intersection, LinkedList<Method> methods, Node faulty)
 			throws OOPMultipleException {
 		LinkedList<Node> path = getPathToBase(intersection);
-		for (Node n : path) {
-			Method[] nMethods = n.inter.getMethods();
-			for (Method m : nMethods) {
-				
-				methods.remove(m);
+		for (Node node : path) {
+			Method[] nMethods = node.inter.getDeclaredMethods();
+			for (Method n_method : nMethods) {
+				LinkedList<Method> methods_cpy = new LinkedList<Method>(methods);
+				for (Method method : methods_cpy) {
+					if (checkForOverride(method, n_method)) methods.remove(method);
+				}
 			}
 		}
 		if (methods.isEmpty())
@@ -199,15 +247,13 @@ public class InterfacesGraph {
 	}
 
 	public static void main(String[] args) throws java.lang.Exception {
-//		try {
-			System.out.println((I2.class.getDeclaredMethods())[0].getName());
-			return;
-//			InterfacesGraph g = new InterfacesGraph(I1.class);
-//			g.printGraph();
-//		} catch (OOPInherentAmbiguity e) {
-//			System.out.println(e.getMessage());
-//			return;
-//		}
-//		System.out.println("SUCCESS");
+		 try {
+		 InterfacesGraph g = new InterfacesGraph(I1.class);
+		 g.printGraph();
+		 } catch (OOPInherentAmbiguity e) {
+		 System.out.println(e.getMessage());
+		 return;
+		 }
+		 System.out.println("SUCCESS");
 	}
 }
