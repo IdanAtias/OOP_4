@@ -41,6 +41,7 @@ public class OOPMultipleClassGenerator {
          * A call to your Multiple Inheritance Tree validation.
          */
         controller.validateInheritanceTree();
+        controller.graph.printGraph();
 
         Object obj = null;
 

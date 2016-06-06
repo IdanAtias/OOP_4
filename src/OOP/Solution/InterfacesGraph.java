@@ -2,58 +2,53 @@ package OOP.Solution;
 
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
 import OOP.Provided.OOPInherentAmbiguity;
 import OOP.Provided.OOPMultipleException;
-import OOP.Solution.OOPMultipleControl.OOPMethod;
-import OOP.Solution.OOPMultipleControl.OOPModifier;
+import OOP.Solution.OOPMethod;
+import OOP.Solution.OOPModifier;
 
-import java.lang.reflect.Executable;//equalParamTypes(Class<?>[] arg0, Class<?>[] arg1)
-
-interface I5 {
-    @OOPMethod(modifier = OOPModifier.PUBLIC)
-	void fa();
-    @OOPMethod(modifier = OOPModifier.PUBLIC)
-	void fb();
-    @OOPMethod(modifier = OOPModifier.PUBLIC)
-	void fc();
-}
-
-interface I4 extends I5 {
-}
-
-interface I3 extends I5 {
-}
-
-interface I2 extends I3, I4 {
-    @OOPMethod(modifier = OOPModifier.PUBLIC)
-	void fa();
-    @OOPMethod(modifier = OOPModifier.PUBLIC)
-	void fb();
-  @OOPMethod(modifier = OOPModifier.PUBLIC)
-	void fc();
-}
-
-interface I1 extends I2 {
+//interface I5 {
+//    @OOPMethod(modifier = OOPModifier.PUBLIC)
+//	void fa();
+//    @OOPMethod(modifier = OOPModifier.PUBLIC)
+//	void fb();
 //    @OOPMethod(modifier = OOPModifier.PUBLIC)
 //	void fc();
-}
+//}
+//
+//interface I4 extends I5 {
+//}
+//
+//interface I3 extends I5 {
+//}
+//
+//interface I2 extends I3, I4 {
+//    @OOPMethod(modifier = OOPModifier.PUBLIC)
+//	void fa();
+//    @OOPMethod(modifier = OOPModifier.PUBLIC)
+//	void fb();
+//  @OOPMethod(modifier = OOPModifier.PUBLIC)
+//	void fc();
+//}
+//
+//interface I1 extends I2 {
+//    @OOPMethod(modifier = OOPModifier.PUBLIC)
+//	void fc();
+//}
 
 public class InterfacesGraph {
 	// graph of interfaces:
 	// vertices are interfaces
 	// edge u->v == u extends v
 
-	/* TODO - CHANGE TO PRIVATE */
 	public HashMap<Node, Class<?>[]> interfaces = new HashMap<Node, Class<?>[]>();
 	public Node base;
 
 	/*****************/
 
 	InterfacesGraph(Class<?> baseInterClass) throws OOPMultipleException {
-		// TODO: throw compatible exception
 		base = new Node(baseInterClass, null);
 		checkAnnotations(baseInterClass);
 		buildGraph(base);
@@ -86,8 +81,25 @@ public class InterfacesGraph {
 					&& isEqualParamTypes(mToOverride.getParameterTypes(), m.getParameterTypes())) {
 					OOPModifier mod_m = (m.getAnnotation(OOPMethod.class)).modifier();
 					OOPModifier mod_mToOverride = (mToOverride.getAnnotation(OOPMethod.class)).modifier();
-					if (mod_mToOverride==OOPModifier.DEFAULT || mod_m == OOPModifier.DEFAULT) {
-						/*TODO - add code*/
+					Package m_pack =  m.getDeclaringClass().getPackage();
+					Package mToOverride_pack = mToOverride.getDeclaringClass().getPackage();
+					if (mod_m == OOPModifier.PRIVATE){
+						/*3*/
+						return false;
+					}
+					if (mod_mToOverride==OOPModifier.DEFAULT){
+						if (mToOverride_pack != base.inter.getPackage()){
+							/*2*/
+							return true;
+						}
+						if (mod_m != OOPModifier.PRIVATE){
+							/*1*/
+							return mToOverride_pack == m_pack;
+						}
+					}
+					if (mod_mToOverride != OOPModifier.DEFAULT && mod_m == OOPModifier.DEFAULT){
+						/*4*/
+						return m_pack == base.inter.getPackage();
 					}
 					return true;
 			}
@@ -104,7 +116,7 @@ public class InterfacesGraph {
 		}
 	}
 
-	public class Node {
+	public static class Node {
 		public Class<?> inter;
 		public Node father;
 
@@ -138,9 +150,6 @@ public class InterfacesGraph {
 				return false;
 			}
 			Node other = (Node) obj;
-			if (getOuterType() != (other.getOuterType())) {
-				return false;
-			}
 			if (inter == null) {
 				if (other.inter != null) {
 					return false;
@@ -149,10 +158,6 @@ public class InterfacesGraph {
 				return false;
 			}
 			return true;
-		}
-
-		private InterfacesGraph getOuterType() {
-			return InterfacesGraph.this;
 		}
 	}
 
@@ -248,14 +253,14 @@ public class InterfacesGraph {
 		}
 	}
 
-	public static void main(String[] args) throws java.lang.Exception {
-		 try {
-		 InterfacesGraph g = new InterfacesGraph(I1.class);
-		 g.printGraph();
-		 } catch (OOPInherentAmbiguity e) {
-		 System.out.println(e.getMessage());
-		 return;
-		 }
-		 System.out.println("SUCCESS");
-	}
+//	public static void main(String[] args) throws java.lang.Exception {
+//		 try {
+//		 InterfacesGraph g = new InterfacesGraph(I1.class);
+//		 g.printGraph();
+//		 } catch (OOPInherentAmbiguity e) {
+//		 System.out.println(e.getMessage());
+//		 return;
+//		 }
+//		 System.out.println("SUCCESS");
+//	}
 }
