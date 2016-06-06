@@ -13,7 +13,6 @@ import OOP.Tests.NivTests.Interfaces.C54;
 import OOP.Tests.NivTests.Interfaces.C55;
 import OOP.Tests.NivTests.Interfaces.C56;
 import OOP.Tests.NivTests.Interfaces.C58;
-import OOP.Tests.NivTests.Interfaces.I33;
 import OOP.Tests.NivTests.Interfaces.I50;
 import OOP.Tests.NivTests.Interfaces.NivsException;
 

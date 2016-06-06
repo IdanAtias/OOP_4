@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.lang.reflect.Method;
 
+import OOP.Provided.OOPBadClass;
 import OOP.Provided.OOPInherentAmbiguity;
 import OOP.Provided.OOPMultipleException;
 import OOP.Solution.OOPMethod;
@@ -115,7 +116,8 @@ public class InterfacesGraph {
 		Method[] methods = inter.getDeclaredMethods();
 		for (Method m : methods) {
 			if (!m.isAnnotationPresent(OOPMethod.class)){
-				throw new OOPInherentAmbiguity(orgBase.inter, inter, m);	
+				//throw new OOPInherentAmbiguity(orgBase.inter, inter, m);
+				throw new OOPBadClass(m);
 			}
 		}
 	}
@@ -163,6 +165,57 @@ public class InterfacesGraph {
 			}
 			return true;
 		}
+	}
+
+	public void checkVisibilityAndOverloading(Class<?> inter,LinkedList<Method> methods) throws OOPMultipleException{
+		Class<?>[] inters = inter.getInterfaces();
+		if (inters.length == 0) {
+			return;
+		}
+		/*if this fails, exception is thrown:*/
+		LinkedList<Method> _methods = addMethodsOnInterAndCheck(inter.getMethods(), methods);
+		
+		for (Class<?> currInter : inters) {
+			checkVisibilityAndOverloading(currInter, _methods);
+		}
+	}
+	
+	private LinkedList<Method> addMethodsOnInterAndCheck(Method[] fatherMethods, LinkedList<Method> sonMethods) throws OOPMultipleException{
+		for (Method fm: fatherMethods){
+			for (Method sm: sonMethods){
+				if (checkForOverloading(fm,sm) || checkForHiding(fm,sm)){
+					throw new OOPBadClass(sm);
+				}
+			}
+			sonMethods.add(fm);
+		}
+		return sonMethods;
+	}
+
+	private boolean checkForHiding(Method fm, Method sm) {
+		if (sm.getName() != fm.getName()){
+			return false;
+		}
+		HashMap<OOPModifier,Integer> orders = new HashMap<OOPModifier,Integer>();
+		for (OOPModifier mod: OOPModifier.values()){
+			if (mod==OOPModifier.PRIVATE){
+				orders.put(mod, 1);
+			} else if (mod==OOPModifier.DEFAULT){
+				orders.put(mod, 2);
+			} else if (mod==OOPModifier.PROTECTED){
+				orders.put(mod, 3);
+			} else {
+				orders.put(mod, 4);
+			}
+		}
+		return orders.get(sm.getAnnotation(OOPMethod.class).modifier()) < orders.get(fm.getAnnotation(OOPMethod.class).modifier());
+	}
+
+	private boolean checkForOverloading(Method fm, Method sm) {
+//		if (fm.getName() == sm.getName() && !isEqualParamTypes(fm.getParameterTypes(),sm.getParameterTypes())){
+//			return true;
+//		}
+		return false;
 	}
 
 	// buildGraph -> on every node: checkForAmbiguitiy -> getPathToBase,

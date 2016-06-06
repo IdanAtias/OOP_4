@@ -9,6 +9,7 @@ import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashSet;
+import java.util.LinkedList;
 
 public class OOPMultipleControl {
 
@@ -29,49 +30,62 @@ public class OOPMultipleControl {
 		for (InterfacesGraph.Node vertex : graph.interfaces.keySet()) {
 			new InterfacesGraph(vertex.inter, true /* isSubTree */);
 		}
+		LinkedList<Method> baseMethods = new LinkedList<Method>();
+		for (Method m: graph.base.inter.getMethods()){
+			baseMethods.add(m);
+		}
+		/*this throws if hiding or overloading*/
+		graph.checkVisibilityAndOverloading(graph.base.inter, baseMethods);
 	}
 
 	// TODO: fill in here :
 	public Object invoke(String methodName, Object[] args) throws OOPMultipleException {
 		HashSet<Pair<Class<?>, Method>> candidates = new HashSet<Pair<Class<?>, Method>>();
-		getMethod(graph.base, methodName, args, candidates,true);
+		getMethod(graph.base, methodName, args, candidates, true);
 		if (candidates.size() == 0)
 			throw new OOPInaccessibleMethod();
 		if (candidates.size() > 1)
 			throw new OOPCoincidentalAmbiguity(candidates);
 		try {
-			Class<?> _class = candidates.iterator().next().getKey();
-			Method methodInClass = candidates.iterator().next().getValue();
-			if (_class.getInterfaces().length() != 1){
-				throw new OOPBadClass(method)
+			Class<?> inter = candidates.iterator().next().getKey();
+			Method method = candidates.iterator().next().getValue();
+			if (method.getAnnotation(OOPMethod.class).modifier() == OOPModifier.PRIVATE) {
+				throw new OOPInaccessibleMethod();
 			}
-			OOPModifier mod = _class.getInterfaces()[]
-			return methodInClass.invoke(_class.newInstance(), args);
+			Class<?> interClass = getClassFromInter(inter, method);
+			Method methodInClass = interClass.getDeclaredMethod(method.getName(), method.getParameterTypes());
+			return methodInClass.invoke(interClass.newInstance(), args);
 		} catch (IllegalAccessException | IllegalArgumentException | InstantiationException e) {
 			throw new OOPInaccessibleMethod();
 		} catch (InvocationTargetException e) {
 			throw (OOPMultipleException) e.getTargetException();
+		} catch (NoSuchMethodException e) {
+			/* CANT BE ACCORDING TO PDF */
+			/*
+			 * SEE PDF IN ASSUMPTIONS SECTION IN NUMBER 5 - CLASS A MUST
+			 * IMPLEMENT ALL METHOD OF INTERFACE A
+			 */
+			return null;
 		}
 	}
 
 	private void getMethod(InterfacesGraph.Node node, String methodName, Object[] args,
 			HashSet<Pair<Class<?>, Method>> candidates, boolean isPathKeepPackage) throws OOPMultipleException {
-		
+
 		if (!node.equals(graph.base)) {
 			isPathKeepPackage = isPathKeepPackage && (node.inter.getPackage() == graph.base.inter.getPackage());
-			Method m = findMethod(node, methodName, args,isPathKeepPackage); // null if cant find
+			Method m = findMethod(node, methodName, args, isPathKeepPackage); // null
+																				// if
+																				// cant
+																				// find
 			if (m != null) {
-				Class<?> interClass = getClassFromInter(node.inter, m);
-				try {
-					Method methodInClass = interClass.getDeclaredMethod(m.getName(), m.getParameterTypes());
-					candidates.add(new Pair<Class<?>, Method>(interClass, methodInClass));
-					return;
-				} catch (NoSuchMethodException e) {}
+				candidates.add(new Pair<Class<?>, Method>(node.inter, m));
+				return;
 			}
 		}
 		for (Class<?> inter : graph.interfaces.get(node)) {
 			InterfacesGraph.Node interNode = new InterfacesGraph.Node(inter, node);
-			getMethod(interNode, methodName, args, candidates,isPathKeepPackage);
+			getMethod(interNode, methodName, args, candidates, isPathKeepPackage);
 		}
 	}
 
@@ -100,7 +114,7 @@ public class OOPMultipleControl {
 			for (Method m : interMethods) {
 				OOPModifier mod = m.getAnnotation(OOPMethod.class).modifier();
 				if (m.getName() == methodName && isTypesEqual(args, m.getParameterTypes())
-						/*&& mod != OOPModifier.PRIVATE*/) {
+				/* && mod != OOPModifier.PRIVATE */) {
 					if (mod == OOPModifier.DEFAULT) {
 						if (node.inter.getPackage() != graph.base.inter.getPackage() || !isPathKeepPackage) {
 							continue;
@@ -113,16 +127,16 @@ public class OOPMultipleControl {
 		return null;
 	}
 
-	/* TODO - DEAL WITH INHERITENCE */
 	private boolean isTypesEqual(Object[] args, Class<?>[] parameterTypes) {
 		if (args == null && (parameterTypes == null || parameterTypes.length == 0)) {
 			return true;
 		}
+		if (args == null) return false;
 		if (args.length != parameterTypes.length) {
 			return false;
 		}
 		for (int i = 0; i < args.length; i++) {
-			if (!args[i].getClass().equals(parameterTypes[i])) {
+			if (!parameterTypes[i].isAssignableFrom(args[i].getClass())) {
 				return false;
 			}
 		}
