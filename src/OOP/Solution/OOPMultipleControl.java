@@ -42,6 +42,10 @@ public class OOPMultipleControl {
 		try {
 			Class<?> _class = candidates.iterator().next().getKey();
 			Method methodInClass = candidates.iterator().next().getValue();
+			if (_class.getInterfaces().length() != 1){
+				throw new OOPBadClass(method)
+			}
+			OOPModifier mod = _class.getInterfaces()[]
 			return methodInClass.invoke(_class.newInstance(), args);
 		} catch (IllegalAccessException | IllegalArgumentException | InstantiationException e) {
 			throw new OOPInaccessibleMethod();
@@ -96,7 +100,7 @@ public class OOPMultipleControl {
 			for (Method m : interMethods) {
 				OOPModifier mod = m.getAnnotation(OOPMethod.class).modifier();
 				if (m.getName() == methodName && isTypesEqual(args, m.getParameterTypes())
-						&& mod != OOPModifier.PRIVATE) {
+						/*&& mod != OOPModifier.PRIVATE*/) {
 					if (mod == OOPModifier.DEFAULT) {
 						if (node.inter.getPackage() != graph.base.inter.getPackage() || !isPathKeepPackage) {
 							continue;
