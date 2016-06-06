@@ -34,7 +34,7 @@ public class OOPMultipleControl {
 	// TODO: fill in here :
 	public Object invoke(String methodName, Object[] args) throws OOPMultipleException {
 		HashSet<Pair<Class<?>, Method>> candidates = new HashSet<Pair<Class<?>, Method>>();
-		getMethod(graph.base, methodName, args, candidates);
+		getMethod(graph.base, methodName, args, candidates,true);
 		if (candidates.size() == 0)
 			throw new OOPInaccessibleMethod();
 		if (candidates.size() > 1)
@@ -51,9 +51,11 @@ public class OOPMultipleControl {
 	}
 
 	private void getMethod(InterfacesGraph.Node node, String methodName, Object[] args,
-			HashSet<Pair<Class<?>, Method>> candidates) throws OOPMultipleException {
+			HashSet<Pair<Class<?>, Method>> candidates, boolean isPathKeepPackage) throws OOPMultipleException {
+		
 		if (!node.equals(graph.base)) {
-			Method m = findMethod(node, methodName, args); // null if cant find
+			isPathKeepPackage = isPathKeepPackage && (node.inter.getPackage() == graph.base.inter.getPackage());
+			Method m = findMethod(node, methodName, args,isPathKeepPackage); // null if cant find
 			if (m != null) {
 				Class<?> interClass = getClassFromInter(node.inter, m);
 				try {
@@ -65,7 +67,7 @@ public class OOPMultipleControl {
 		}
 		for (Class<?> inter : graph.interfaces.get(node)) {
 			InterfacesGraph.Node interNode = new InterfacesGraph.Node(inter, node);
-			getMethod(interNode, methodName, args, candidates);
+			getMethod(interNode, methodName, args, candidates,isPathKeepPackage);
 		}
 	}
 
@@ -87,7 +89,7 @@ public class OOPMultipleControl {
 
 	}
 
-	private Method findMethod(Node node, String methodName, Object[] args) {
+	private Method findMethod(Node node, String methodName, Object[] args, boolean isPathKeepPackage) {
 		if (node != null && methodName != null) {
 			Class<?> interClass = node.inter;
 			Method[] interMethods = interClass.getDeclaredMethods();
@@ -96,7 +98,7 @@ public class OOPMultipleControl {
 				if (m.getName() == methodName && isTypesEqual(args, m.getParameterTypes())
 						&& mod != OOPModifier.PRIVATE) {
 					if (mod == OOPModifier.DEFAULT) {
-						if (node.inter.getPackage() != graph.base.inter.getPackage()) {
+						if (node.inter.getPackage() != graph.base.inter.getPackage() || !isPathKeepPackage) {
 							continue;
 						}
 					}
