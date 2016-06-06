@@ -45,13 +45,17 @@ public class InterfacesGraph {
 
 	public HashMap<Node, Class<?>[]> interfaces = new HashMap<Node, Class<?>[]>();
 	public Node base;
+	private static Node orgBase = null;
 
 	/*****************/
 
-	InterfacesGraph(Class<?> baseInterClass) throws OOPMultipleException {
+	InterfacesGraph(Class<?> baseInterClass, boolean isSubTree) throws OOPMultipleException {
 		base = new Node(baseInterClass, null);
-		checkAnnotations(baseInterClass);
-		buildGraph(base);
+		if (!isSubTree){
+			orgBase = base;
+		}
+		if (isSubTree) checkAnnotations(baseInterClass);
+		buildGraph(base,isSubTree);
 	}
 	
 	private boolean isEqualParamTypes(Class<?>[] arg0, Class<?>[] arg1) {
@@ -111,7 +115,7 @@ public class InterfacesGraph {
 		Method[] methods = inter.getDeclaredMethods();
 		for (Method m : methods) {
 			if (!m.isAnnotationPresent(OOPMethod.class)){
-				throw new OOPInherentAmbiguity(base.inter, inter, m);	
+				throw new OOPInherentAmbiguity(orgBase.inter, inter, m);	
 			}
 		}
 	}
@@ -163,7 +167,7 @@ public class InterfacesGraph {
 
 	// buildGraph -> on every node: checkForAmbiguitiy -> getPathToBase,
 	// getIntersection, checkForAmbiguityAux
-	private void buildGraph(Node interNode) throws OOPMultipleException {
+	public void buildGraph(Node interNode, boolean isSubTree) throws OOPMultipleException {
 		// getting the interfaces baseInter extends:
 		Class<?>[] interfaces = interNode.inter.getInterfaces();
 
@@ -173,17 +177,19 @@ public class InterfacesGraph {
 			return;
 		}
 		for (Class<?> iter : interfaces) {
-			checkAnnotations(iter);
+			if (isSubTree){
+				checkAnnotations(iter);
+			}
 			Node currNode = new Node(iter, interNode);
-			if (this.interfaces.containsKey(currNode)) {
-				checkForAmbiguity(currNode); // throws OOPinheritedAmbiguity if
+			if (isSubTree && this.interfaces.containsKey(currNode)) {
+				checkForAmbiguity(currNode, isSubTree); // throws OOPinheritedAmbiguity if
 												// fails.
 			}
-			buildGraph(currNode);
+			buildGraph(currNode, isSubTree);
 		}
 	}
 
-	private void checkForAmbiguity(Node interNode) throws OOPMultipleException {
+	private void checkForAmbiguity(Node interNode, boolean isSubTree) throws OOPMultipleException {
 		LinkedList<Node> path = getPathToBase(interNode.father);
 		Node existsNode = null;
 		for (Node curr : interfaces.keySet()) {
@@ -197,14 +203,14 @@ public class InterfacesGraph {
 		for (Method m : interNode.inter.getDeclaredMethods()) {
 			methods.add(m);
 		}
-		checkForAmbiguityAux(intersection, methods, interNode);
+		checkForAmbiguityAux(intersection, methods, interNode, isSubTree);
 	}
 
-	private void checkForAmbiguityAux(Node intersection, LinkedList<Method> methods, Node faulty)
+	private void checkForAmbiguityAux(Node intersection, LinkedList<Method> methods, Node faulty, boolean isSubTree)
 			throws OOPMultipleException {
 		LinkedList<Node> path = getPathToBase(intersection);
 		for (Node node : path) {
-			if (node.equals(base)){ /*base funcs cant override*/
+			if (!isSubTree && node.equals(base)){ /*base funcs cant override*/
 				continue;
 			}
 			Method[] nMethods = node.inter.getDeclaredMethods();
@@ -217,7 +223,7 @@ public class InterfacesGraph {
 		}
 		if (methods.isEmpty())
 			return;
-		throw new OOPInherentAmbiguity(base.inter, faulty.inter, methods.getFirst());
+		throw new OOPInherentAmbiguity(orgBase.inter, faulty.inter, methods.getFirst());
 	}
 
 	private Node getIntersection(Node existsNode, LinkedList<Node> path) {

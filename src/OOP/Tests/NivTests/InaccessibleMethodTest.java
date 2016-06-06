@@ -46,19 +46,19 @@ public class InaccessibleMethodTest {
 		};
 	};
 	
-	@Test
-	public void PublicTest(){
-		try{
-			obj.fPublic();
-			obj.fOverridenProtected();
-			obj.fOverridendefault();
-			obj.fOverridenPrivate();
-		}catch (OOPInaccessibleMethod e){
-			fail("The methods should be accessible here");
-		}catch (OOPMultipleException e){
-			fail("unexpected exception");
-		}	
-	}
+//	@Test
+//	public void PublicTest(){
+//		try{
+//			obj.fPublic();
+//			obj.fOverridenProtected();
+//			obj.fOverridendefault();
+//			obj.fOverridenPrivate();
+//		}catch (OOPInaccessibleMethod e){
+//			fail("The methods should be accessible here");
+//		}catch (OOPMultipleException e){
+//			fail("unexpected exception");
+//		}	
+//	}
 	
 	@Test
 	public void PrivateTest(){
@@ -72,7 +72,6 @@ public class InaccessibleMethodTest {
 		}
 		assertTrue("didn't throw OOPInaccessibleMethod",caught);
 	}
-	
 	@Test
 	public void DefaultTest(){
 		try{

@@ -7,5 +7,5 @@ import OOP.Solution.OOPModifier;
 public interface I43 {
 	@OOPMethod(modifier = OOPModifier.DEFAULT)
 	public void fDefaultInSamePackage() throws OOPMultipleException;
-
 }
+

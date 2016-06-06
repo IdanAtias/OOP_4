@@ -25,7 +25,10 @@ public class OOPMultipleControl {
 
 	// TODO: fill in here :
 	public void validateInheritanceTree() throws OOPMultipleException {
-		graph = new InterfacesGraph(interfaceClass);
+		graph = new InterfacesGraph(interfaceClass, false /* isSubTree */);
+		for (InterfacesGraph.Node vertex : graph.interfaces.keySet()) {
+			new InterfacesGraph(vertex.inter, true /* isSubTree */);
+		}
 	}
 
 	// TODO: fill in here :
@@ -57,9 +60,7 @@ public class OOPMultipleControl {
 					Method methodInClass = interClass.getDeclaredMethod(m.getName(), m.getParameterTypes());
 					candidates.add(new Pair<Class<?>, Method>(interClass, methodInClass));
 					return;
-				} catch (NoSuchMethodException e) {
-					throw new OOPBadClass(m);
-				}
+				} catch (NoSuchMethodException e) {}
 			}
 		}
 		for (Class<?> inter : graph.interfaces.get(node)) {
