@@ -144,28 +144,32 @@ public class InterfacesGraph {
 	}
 
 	public void checkVisibilityAndOverloading(Class<?> inter,LinkedList<Method> methods) throws OOPMultipleException{
+		if (inter == null || methods == null){
+			return;
+		}
+		/*if this fails, exception is thrown:*/
+		/*LinkedList<Method> currMethods = new LinkedList<>(methods);*/
+		LinkedList<Method> _methods = addMethodsOnInterAndCheck(inter.getDeclaredMethods(), methods);
 		Class<?>[] inters = inter.getInterfaces();
 		if (inters.length == 0) {
 			return;
 		}
-		/*if this fails, exception is thrown:*/
-		LinkedList<Method> _methods = addMethodsOnInterAndCheck(inter.getMethods(), methods);
-		
 		for (Class<?> currInter : inters) {
 			checkVisibilityAndOverloading(currInter, _methods);
 		}
 	}
 	
 	private LinkedList<Method> addMethodsOnInterAndCheck(Method[] fatherMethods, LinkedList<Method> sonMethods) throws OOPMultipleException{
+		LinkedList<Method> sMethods = new LinkedList<>(sonMethods);
 		for (Method fm: fatherMethods){
 			for (Method sm: sonMethods){
-				if (checkForOverloading(fm,sm) || checkForHiding(fm,sm)){
+				if (/*checkForOverloading(fm,sm) || */ checkForHiding(fm,sm)){
 					throw new OOPBadClass(sm);
 				}
 			}
-			sonMethods.add(fm);
+			sMethods.add(fm);
 		}
-		return sonMethods;
+		return sMethods;
 	}
 
 	private boolean checkForHiding(Method fm, Method sm) {
@@ -187,12 +191,12 @@ public class InterfacesGraph {
 		return orders.get(sm.getAnnotation(OOPMethod.class).modifier()) < orders.get(fm.getAnnotation(OOPMethod.class).modifier());
 	}
 
-	private boolean checkForOverloading(Method fm, Method sm) {
-//		if (fm.getName() == sm.getName() && !isEqualParamTypes(fm.getParameterTypes(),sm.getParameterTypes())){
+//	private boolean checkForOverloading(Method fm, Method sm) {
+//		if (fm.getName() == sm.getName() /*&& !isEqualParamTypes(fm.getParameterTypes(),sm.getParameterTypes())*/){
 //			return true;
 //		}
-		return false;
-	}
+//		return false;
+//	}
 
 	// buildGraph -> on every node: checkForAmbiguitiy -> getPathToBase,
 	// getIntersection, checkForAmbiguityAux
@@ -229,8 +233,18 @@ public class InterfacesGraph {
 		}
 		Node intersection = getIntersection(existsNode, path);
 		LinkedList<Method> methods = new LinkedList<Method>();
+		Package pack = interNode.inter.getPackage();
+		boolean isSamePack = true;
+		for (Node n: path){
+			if (!n.inter.getPackage().equals(pack)){
+				isSamePack = false;
+				break;
+			}
+		}
 		for (Method m : interNode.inter.getDeclaredMethods()) {
-			
+			if (m.getAnnotation(OOPMethod.class).modifier() == OOPModifier.DEFAULT && !isSamePack){
+				continue;
+			}
 			methods.add(m);
 		}
 		checkForAmbiguityAux(intersection, methods, interNode, isSubTree);
@@ -247,9 +261,13 @@ public class InterfacesGraph {
 			for (Method n_method : nMethods) {
 				LinkedList<Method> methods_cpy = new LinkedList<Method>(methods);
 				for (Method method : methods_cpy) {
-					if (checkForOverride(method, n_method)){
+					OOPModifier mod = method.getAnnotation(OOPMethod.class).modifier();
+					/*private methods in duplicated class wont cause ambiguity*/
+					if (mod == OOPModifier.PRIVATE || checkForOverride(method, n_method)){
 						methods.remove(method);
 					}
+					if (methods.isEmpty())
+						return;
 				}
 			}
 		}

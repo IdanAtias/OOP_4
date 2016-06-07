@@ -31,7 +31,7 @@ public class OOPMultipleControl {
 			new InterfacesGraph(vertex.inter, true /* isSubTree */);
 		}
 		LinkedList<Method> baseMethods = new LinkedList<Method>();
-		for (Method m: graph.base.inter.getMethods()){
+		for (Method m: graph.base.inter.getDeclaredMethods()){
 			baseMethods.add(m);
 		}
 		/*this throws if hiding or overloading*/
@@ -74,12 +74,14 @@ public class OOPMultipleControl {
 
 		if (!node.equals(graph.base)) {
 			isPathKeepPackage = isPathKeepPackage && (node.inter.getPackage() == graph.base.inter.getPackage());
-			Method m = findMethod(node, methodName, args, isPathKeepPackage); // null
-																				// if
-																				// cant
-																				// find
+			/*null if cant find*/
+			Method m = findMethod(node, methodName, args, isPathKeepPackage); 
 			if (m != null) {
-				candidates.add(new Pair<Class<?>, Method>(node.inter, m));
+				if (!isTypesEqual(args, m.getParameterTypes())){
+					/*found overloading - throw inaccessible*/
+					throw new OOPInaccessibleMethod(); /*could found what else to throw*/
+				}
+					candidates.add(new Pair<Class<?>, Method>(node.inter, m));
 				return;
 			}
 		}
@@ -113,8 +115,8 @@ public class OOPMultipleControl {
 			Method[] interMethods = interClass.getDeclaredMethods();
 			for (Method m : interMethods) {
 				OOPModifier mod = m.getAnnotation(OOPMethod.class).modifier();
-				if (m.getName() == methodName && isTypesEqual(args, m.getParameterTypes())
-				/* && mod != OOPModifier.PRIVATE */) {
+				if (m.getName() == methodName /*&& isTypesEqual(args, m.getParameterTypes())
+				 && mod != OOPModifier.PRIVATE */) {
 					if (mod == OOPModifier.DEFAULT) {
 						if (node.inter.getPackage() != graph.base.inter.getPackage() || !isPathKeepPackage) {
 							continue;

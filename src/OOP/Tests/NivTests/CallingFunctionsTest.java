@@ -55,7 +55,7 @@ public class CallingFunctionsTest {
 				 */
 				assertEquals(obj.f7(),new C58().f7());
 				assertEquals(obj.f7('t'),new Character('t'));
-			}catch(OOPCoincidentalAmbiguity e){
+			}catch(OOPCoincidentalAmbiguity | OOPInaccessibleMethod e){
 				caught = true;
 			}
 			assertTrue("This should throw OOPCoincidentalAmbiguity, idk why",caught);
