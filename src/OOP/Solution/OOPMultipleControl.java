@@ -109,17 +109,16 @@ public class OOPMultipleControl {
 
 	}
 
-	private Method findMethod(Node node, String methodName, Object[] args, boolean isPathKeepPackage) {
+	private Method findMethod(Node node, String methodName, Object[] args, boolean isPathKeepPackage) throws OOPMultipleException{
 		if (node != null && methodName != null) {
 			Class<?> interClass = node.inter;
 			Method[] interMethods = interClass.getDeclaredMethods();
 			for (Method m : interMethods) {
 				OOPModifier mod = m.getAnnotation(OOPMethod.class).modifier();
-				if (m.getName() == methodName /*&& isTypesEqual(args, m.getParameterTypes())
-				 && mod != OOPModifier.PRIVATE */) {
+				if (m.getName() == methodName) {
 					if (mod == OOPModifier.DEFAULT) {
 						if (node.inter.getPackage() != graph.base.inter.getPackage() || !isPathKeepPackage) {
-							continue;
+							throw new OOPInaccessibleMethod();
 						}
 					}
 					return m;
