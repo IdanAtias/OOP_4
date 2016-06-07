@@ -10,34 +10,6 @@ import OOP.Provided.OOPMultipleException;
 import OOP.Solution.OOPMethod;
 import OOP.Solution.OOPModifier;
 
-//interface I5 {
-//    @OOPMethod(modifier = OOPModifier.PUBLIC)
-//	void fa();
-//    @OOPMethod(modifier = OOPModifier.PUBLIC)
-//	void fb();
-//    @OOPMethod(modifier = OOPModifier.PUBLIC)
-//	void fc();
-//}
-//
-//interface I4 extends I5 {
-//}
-//
-//interface I3 extends I5 {
-//}
-//
-//interface I2 extends I3, I4 {
-//    @OOPMethod(modifier = OOPModifier.PUBLIC)
-//	void fa();
-//    @OOPMethod(modifier = OOPModifier.PUBLIC)
-//	void fb();
-//  @OOPMethod(modifier = OOPModifier.PUBLIC)
-//	void fc();
-//}
-//
-//interface I1 extends I2 {
-//    @OOPMethod(modifier = OOPModifier.PUBLIC)
-//	void fc();
-//}
 
 public class InterfacesGraph {
 	// graph of interfaces:
@@ -81,13 +53,17 @@ public class InterfacesGraph {
 	 * True if overrides, else False.
 	 */
 	private boolean checkForOverride(Method mToOverride, Method m) {
-		if (mToOverride != null && m != null && m instanceof Method && mToOverride instanceof Method) {
+		if (mToOverride != null && m != null && m instanceof Method && mToOverride instanceof Method) { /*params check*/
+			
 			if (mToOverride.getName() == m.getName() && mToOverride.getReturnType().equals(m.getReturnType())
-					&& isEqualParamTypes(mToOverride.getParameterTypes(), m.getParameterTypes())) {
+					&& isEqualParamTypes(mToOverride.getParameterTypes(), m.getParameterTypes())) { /*method equality check*/
+				
 					OOPModifier mod_m = (m.getAnnotation(OOPMethod.class)).modifier();
 					OOPModifier mod_mToOverride = (mToOverride.getAnnotation(OOPMethod.class)).modifier();
+					
 					Package m_pack =  m.getDeclaringClass().getPackage();
 					Package mToOverride_pack = mToOverride.getDeclaringClass().getPackage();
+					
 					if (mod_m == OOPModifier.PRIVATE){
 						/*3*/
 						return false;
@@ -254,6 +230,7 @@ public class InterfacesGraph {
 		Node intersection = getIntersection(existsNode, path);
 		LinkedList<Method> methods = new LinkedList<Method>();
 		for (Method m : interNode.inter.getDeclaredMethods()) {
+			
 			methods.add(m);
 		}
 		checkForAmbiguityAux(intersection, methods, interNode, isSubTree);
@@ -270,7 +247,9 @@ public class InterfacesGraph {
 			for (Method n_method : nMethods) {
 				LinkedList<Method> methods_cpy = new LinkedList<Method>(methods);
 				for (Method method : methods_cpy) {
-					if (checkForOverride(method, n_method)) methods.remove(method);
+					if (checkForOverride(method, n_method)){
+						methods.remove(method);
+					}
 				}
 			}
 		}
